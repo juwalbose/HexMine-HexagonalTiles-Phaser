@@ -1,7 +1,7 @@
 /*global Phaser*/
 /* activity spawns pickups randomly which the character can collect by walking over */
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, 'TutContainer', { preload: preload, create: create, update:update });
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'TutContainer', { preload: preload, create: create});
 
 //horizontal tile shaped level
 var levelData=
@@ -24,6 +24,7 @@ var hexTileHeight=102;//this is for horizontal
 var hexTileWidth=88;//for horizontal
 var hexGrid;
 var isVertical=false;
+var infoTxt;
 
 
 function preload() {
@@ -36,10 +37,58 @@ function create() {
     bmpText = game.add.bitmapText(10, 10, 'font', 'Hex Tutorial', 18);
     game.stage.backgroundColor = '#cccccc';
     createLevel();
+    infoTxt=game.add.text(10,30,'hi');
+    game.input.addMoveCallback(findHexTile, this);
 }
 
-function update(){
+function findHexTile(){
+    var pos=game.input.activePointer.position;
+    var xVal = Math.floor((pos.x)/hexTileWidth);
+    var yVal = Math.floor((pos.y)/(hexTileHeight*3/4));
+    var dX = (pos.x)%hexTileWidth;
+    var dY = (pos.y)%(hexTileHeight*3/4); 
+    var slope = (hexTileHeight/4)/(hexTileWidth/2);
+    if(yVal%2==0){
+        if(dY<((hexTileHeight/4)-dX*slope)){
+            xVal--;
+            yVal--;console.log('top');
+        }
+        if(dY<((-hexTileHeight/4)+dX*slope)){
+            yVal--;console.log('top d');
+        }
+    }    
+    else{
+        if(dX>=hexTileWidth/2){
+            if(dY<(hexTileHeight/2-dX*slope)){
+                yVal--;console.log('bottom');
+            }
+        }
+        else{
+            if(dY<dX*slope){
+                yVal--;console.log('bottom t');
+            }
+            else{
+                xVal--;console.log('bottom d');
+            }
+        }
+    }
+   /*var pos=game.input.activePointer.position;
+   var yVal=Math.floor(pos.y/(hexTileHeight*3/4));
+   var xVal=Math.floor(pos.x/hexTileWidth);
+   var dY=pos.y%(hexTileHeight*3/4);
+   var dX=pos.x%hexTileWidth;
+   var slope=(hexTileHeight/4)/(hexTileWidth/2);
+
    
+   if(yVal%2!=0){
+       pos.x-=hexTileWidth/2;
+       xVal=Math.floor(pos.x/hexTileWidth);
+       dX=pos.x%hexTileWidth;
+   }
+   var calcdY=slope*dX;
+   console.log(dX+':'+dY+':'+calcdY);*/
+   
+   infoTxt.text='i'+yVal +'j'+xVal;
 }
 
 function createLevel(){
@@ -73,7 +122,7 @@ function createLevel(){
                     startY=startY-startXInit;
                 }
                 if(levelData[i][j]!=0){
-                    hexTile= new HexTile(game, startX, startY, 'hex',isVertical, true,j,i);
+                    hexTile= new HexTile(game, startX, startY, 'hex',isVertical, true,i,j);
                     hexGrid.add(hexTile);
                 }
             
@@ -81,15 +130,15 @@ function createLevel(){
             }
         }else{
             if(i%2!=0){
-                startX=startXInit;
+                startX=2*startXInit;
             }else{
-                startX=0;
+                startX=startXInit;
             }
             startY=startYInit+(i*verticalOffset);
             for (var j = 0; j < levelData[0].length; j++)
             {
                 if(levelData[i][j]!=0){
-                    hexTile= new HexTile(game, startX, startY, 'hex',isVertical, true,j,i);
+                    hexTile= new HexTile(game, startX, startY, 'hex',isVertical, true,i,j);
                     hexGrid.add(hexTile);
                 }
             
@@ -97,9 +146,9 @@ function createLevel(){
             }
         }
     }
-    hexGrid.scale=new Phaser.Point(0.4,0.4);
-    hexGrid.x=50;
-    hexGrid.y=60;
+    //hexGrid.scale=new Phaser.Point(0.4,0.4);
+    hexGrid.x=0;
+    hexGrid.y=0;
 }
 
 function transpose(a) {

@@ -5,7 +5,7 @@ HexTile = function (game, x, y, tileImage,isVertical, isDebug, i,j) {
     this.anchor.setTo(0.5, 0.5);
     if(isDebug){
         //var z=-i-j;
-        var tileTag = game.make.text(0,0,i+','+j);
+        var tileTag = game.make.text(0,0,'i'+i+',j'+j);
         tileTag.anchor.setTo(0.5, 0.5);
         tileTag.addColor('#ffffff',0);
         if(isVertical){
@@ -16,8 +16,8 @@ HexTile = function (game, x, y, tileImage,isVertical, isDebug, i,j) {
     if(isVertical){
         this.rotation=Math.PI/2;
     }
-    this.inputEnabled=true;
-    this.events.onInputDown.add(paintRed, this);
+    //this.inputEnabled=true;
+    //this.events.onInputDown.add(paintRed, this);
 };
 
 HexTile.prototype = Object.create(Phaser.Sprite.prototype);
@@ -29,7 +29,7 @@ HexTile.prototype.constructor = HexTile;
 HexTile.prototype.update = function() {
 
 };
-
+/*
 paintRed=function(){
     this.tint='#ff0000';
-}
+}*/
