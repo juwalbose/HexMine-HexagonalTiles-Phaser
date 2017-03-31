@@ -41,8 +41,8 @@ function create() {
     levelData=transpose(levelData);//transpose for having the right shape
     createLevel();
     infoTxt=game.add.text(10,30,'hi');
-    game.input.addMoveCallback(findHexTile, this);
-    //game.input.activePointer.leftButton.onUp.add(onTap);
+    //game.input.addMoveCallback(findHexTile, this);
+    game.input.activePointer.leftButton.onUp.add(onTap);
 }
 
 function createLevel(){
@@ -214,40 +214,41 @@ function findHexTile(){
     var pos=game.input.activePointer.position;
     pos.x-=hexGrid.x;
     pos.y-=hexGrid.y;
-    var xVal = Math.floor((pos.x)/hexTileWidth);
-    var yVal = Math.floor((pos.y)/(hexTileHeight*3/4));
-    var dX = (pos.x)%hexTileWidth;
-    var dY = (pos.y)%(hexTileHeight*3/4); 
-    var slope = (hexTileHeight/4)/(hexTileWidth/2);
-    var caldY=dX*slope;
-    var delta=hexTileHeight/4-caldY;
-    
-    if(yVal%2==0){
-       //correction needs to happen in triangular portions & the offset rows
-       if(Math.abs(delta)>dY){
-           if(delta>0){//odd row bottom right half
+    var xVal = Math.floor((pos.x)/(hexTileWidth*3/4));
+    var yVal = Math.floor((pos.y)/(hexTileHeight));
+    var dX = (pos.x)%(hexTileWidth*3/4);
+    var dY = (pos.y)%(hexTileHeight); 
+    var slope = (hexTileHeight/2)/(hexTileWidth/4);
+    var caldX=dY/slope;
+    var delta=hexTileWidth/4-caldX;
+    if(xVal%2==0){
+        if(dX>Math.abs(delta)){// even left
+            
+        }else{//odd right
+            if(delta>0){//odd right bottom
                 xVal--;
                 yVal--;
-           }else{//odd row bottom left half
-                yVal--;
-           }
-       }
-    }else{
-        if(dX>hexTileWidth/2){// available values don't work for even row bottom right half
-            //console.log(delta+':'+dY+':'+((hexTileHeight/2)-caldY)); 
-            if(dY<((hexTileHeight/2)-caldY)){//even row bottom right half
-                yVal--;
+            }else{//odd right top
+                xVal--;
             }
-        }else{
-           if(dY>caldY){//odd row top right & mid right halves
-               xVal--;
-           }else{//even row bottom left half
-               yVal--;
+        }
+    }else{
+        if(delta>0){
+            if(dX<caldX){//even right top
+                xVal--;
+            }else{//odd mid
+               yVal--; 
+            }
+        }else{//current values wont help for even right bottom
+           if(dX<((hexTileWidth/2)-caldX)){//even right bottom
+              //console.log(dY+':'+dX+':'+((hexTileWidth/2)-caldX));
+                xVal--;
            }
         }
+        
     }
    
-   infoTxt.text='i'+yVal +'j'+xVal;
+   //infoTxt.text='i'+yVal +'j'+xVal;
    pos.x=yVal;
    pos.y=xVal;
    return pos;
