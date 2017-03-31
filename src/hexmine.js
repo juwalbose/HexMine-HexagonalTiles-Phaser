@@ -1,7 +1,7 @@
 /*global Phaser*/
 /* activity spawns pickups randomly which the character can collect by walking over */
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, 'TutContainer', { preload: preload, create: create});
+var game = new Phaser.Game(800, 680, Phaser.AUTO, 'TutContainer', { preload: preload, create: create});
 
 //horizontal tile shaped level
 var levelData=
@@ -20,11 +20,12 @@ var levelData=
 [0,0,0,1,1,1,1,1,1,1,0,0,0]];
 
 var bmpText;
-var hexTileHeight=102;//this is for horizontal
-var hexTileWidth=88;//for horizontal
+var hexTileHeight=61;//this is for horizontal
+var hexTileWidth=52;//for horizontal
 var hexGrid;
 var isVertical=false;
 var infoTxt;
+var numMines=10;
 
 
 function preload() {
@@ -43,50 +44,40 @@ function create() {
 
 function findHexTile(){
     var pos=game.input.activePointer.position;
+    pos.x-=hexGrid.x;
+    pos.y-=hexGrid.y;
     var xVal = Math.floor((pos.x)/hexTileWidth);
     var yVal = Math.floor((pos.y)/(hexTileHeight*3/4));
     var dX = (pos.x)%hexTileWidth;
     var dY = (pos.y)%(hexTileHeight*3/4); 
     var slope = (hexTileHeight/4)/(hexTileWidth/2);
+    var caldY=dX*slope;
+    var delta=hexTileHeight/4-caldY;
+    
     if(yVal%2==0){
-        if(dY<((hexTileHeight/4)-dX*slope)){
-            xVal--;
-            yVal--;console.log('top');
-        }
-        if(dY<((-hexTileHeight/4)+dX*slope)){
-            yVal--;console.log('top d');
-        }
-    }    
-    else{
-        if(dX>=hexTileWidth/2){
-            if(dY<(hexTileHeight/2-dX*slope)){
-                yVal--;console.log('bottom');
+       //correction needs to happen in triangular portions & the offset rows
+       if(Math.abs(delta)>dY){
+           if(delta>0){//odd row bottom right half
+                xVal--;
+                yVal--;
+           }else{//odd row bottom left half
+                yVal--;
+           }
+       }
+    }else{
+        if(dX>hexTileWidth/2){// available values don't work for even row bottom right half
+            //console.log(delta+':'+dY+':'+((hexTileHeight/2)-caldY)); 
+            if(dY<((hexTileHeight/2)-caldY)){//even row bottom right half
+                yVal--;
             }
-        }
-        else{
-            if(dY<dX*slope){
-                yVal--;console.log('bottom t');
-            }
-            else{
-                xVal--;console.log('bottom d');
-            }
+        }else{
+           if(dY>caldY){//odd row top right & mid right halves
+               xVal--;
+           }else{//even row bottom left half
+               yVal--;
+           }
         }
     }
-   /*var pos=game.input.activePointer.position;
-   var yVal=Math.floor(pos.y/(hexTileHeight*3/4));
-   var xVal=Math.floor(pos.x/hexTileWidth);
-   var dY=pos.y%(hexTileHeight*3/4);
-   var dX=pos.x%hexTileWidth;
-   var slope=(hexTileHeight/4)/(hexTileWidth/2);
-
-   
-   if(yVal%2!=0){
-       pos.x-=hexTileWidth/2;
-       xVal=Math.floor(pos.x/hexTileWidth);
-       dX=pos.x%hexTileWidth;
-   }
-   var calcdY=slope*dX;
-   console.log(dX+':'+dY+':'+calcdY);*/
    
    infoTxt.text='i'+yVal +'j'+xVal;
 }
@@ -108,6 +99,9 @@ function createLevel(){
         horizontalOffset=hexTileHeight*3/4;
         levelData=transpose(levelData);// we transpose the level array so that it creates proper shape
     }
+    
+    addMines();
+    
     var hexTile;
     for (var i = 0; i < levelData.length; i++)
     {
@@ -138,7 +132,7 @@ function createLevel(){
             for (var j = 0; j < levelData[0].length; j++)
             {
                 if(levelData[i][j]!=0){
-                    hexTile= new HexTile(game, startX, startY, 'hex',isVertical, true,i,j);
+                    hexTile= new HexTile(game, startX, startY, 'hex',isVertical, true,i,j,levelData[i][j]);
                     hexGrid.add(hexTile);
                 }
             
@@ -147,8 +141,31 @@ function createLevel(){
         }
     }
     //hexGrid.scale=new Phaser.Point(0.4,0.4);
-    hexGrid.x=0;
-    hexGrid.y=0;
+    hexGrid.x=50;
+    hexGrid.y=50;
+}
+function addMines(){
+    var tileType=0;
+    var tempArray=[];
+    var newPt=new Phaser.Point();
+    for (var i = 0; i < levelData.length; i++)
+    {
+        for (var j = 0; j < levelData[0].length; j++)
+        {
+            tileType=levelData[i][j];
+            if(tileType==1){
+                newPt=new Phaser.Point();
+                newPt.x=i;
+                newPt.y=j;
+                tempArray.push(newPt);
+            }
+        }
+    }
+    for (var i = 0; i < numMines; i++)
+    {
+        newPt=Phaser.ArrayUtils.removeRandomItem(tempArray);
+        levelData[newPt.x][newPt.y]=10;//10 is mine
+    }
 }
 
 function transpose(a) {
