@@ -24,7 +24,9 @@ var hexTileHeight=61;//this is for horizontal
 var hexTileWidth=52;//for horizontal
 var hexGrid;
 var infoTxt;
-var numMines=10;
+var numMines=20;
+var blankTiles=0;
+var revealedTiles=0;
 
 
 function preload() {
@@ -38,47 +40,8 @@ function create() {
     game.stage.backgroundColor = '#cccccc';
     createLevel();
     infoTxt=game.add.text(10,30,'hi');
-    game.input.addMoveCallback(findHexTile, this);
-}
-
-function findHexTile(){
-    var pos=game.input.activePointer.position;
-    pos.x-=hexGrid.x;
-    pos.y-=hexGrid.y;
-    var xVal = Math.floor((pos.x)/hexTileWidth);
-    var yVal = Math.floor((pos.y)/(hexTileHeight*3/4));
-    var dX = (pos.x)%hexTileWidth;
-    var dY = (pos.y)%(hexTileHeight*3/4); 
-    var slope = (hexTileHeight/4)/(hexTileWidth/2);
-    var caldY=dX*slope;
-    var delta=hexTileHeight/4-caldY;
-    
-    if(yVal%2==0){
-       //correction needs to happen in triangular portions & the offset rows
-       if(Math.abs(delta)>dY){
-           if(delta>0){//odd row bottom right half
-                xVal--;
-                yVal--;
-           }else{//odd row bottom left half
-                yVal--;
-           }
-       }
-    }else{
-        if(dX>hexTileWidth/2){// available values don't work for even row bottom right half
-            //console.log(delta+':'+dY+':'+((hexTileHeight/2)-caldY)); 
-            if(dY<((hexTileHeight/2)-caldY)){//even row bottom right half
-                yVal--;
-            }
-        }else{
-           if(dY>caldY){//odd row top right & mid right halves
-               xVal--;
-           }else{//even row bottom left half
-               yVal--;
-           }
-        }
-    }
-   
-   infoTxt.text='i'+yVal +'j'+xVal;
+    //game.input.addMoveCallback(findHexTile, this);
+    game.input.activePointer.leftButton.onUp.add(onTap);
 }
 
 function createLevel(){
@@ -105,8 +68,11 @@ function createLevel(){
         for (var j = 0; j < levelData[0].length; j++)
         {
             if(levelData[i][j]!=-1){
-                hexTile= new HexTile(game, startX, startY, 'hex',false, true,i,j,levelData[i][j]);
+                hexTile= new HexTile(game, startX, startY, 'hex',false,i,j,levelData[i][j]);
                 hexGrid.add(hexTile);
+                if(levelData[i][j]!=10){
+                    blankTiles++;
+                }
             }
             
             startX+=horizontalOffset;
@@ -152,28 +118,6 @@ function updateNeighbors(i,j){//update neighbors around this mine
         levelData[tmpPt.x][tmpPt.y]=tileType+1;
     }
 }
-/*
-function updateNeighbors(){//find who all has mines & update neighbors
-    var tileType=0;
-    for (var i = 0; i < levelData.length; i++)
-    {
-        for (var j = 0; j < levelData[0].length; j++)
-        {
-            tileType=levelData[i][j];
-            if(tileType==10){
-                var tempArray=getNeighbors(i,j);
-                var tmpPt;
-                for (var k = 0; k < tempArray.length; k++)
-                {
-                    tmpPt=tempArray[k];
-                    //console.log(tmpPt.x+':'+tmpPt.y);
-                    tileType=levelData[tmpPt.x][tmpPt.y];
-                    levelData[tmpPt.x][tmpPt.y]=tileType+1;
-                }
-            }
-        }
-    }
-}*/
 function getNeighbors(i,j){
     //first add common elements for odd & even rows
     var tempArray=[];
@@ -228,5 +172,105 @@ function populateNeighbor(i,j, tempArray){//check & add new neighbor
             newPt.y=j;
             tempArray.push(newPt);
         }
+    }
+}
+function onTap(){
+    var tile= findHexTile();
+    if (game.input.activePointer.duration > 400) {//long press to toggle marking suspicious tile
+        var hexTile=hexGrid.getByName("tile"+tile.x+"_"+tile.y);
+        hexTile.toggleMark();
+        return;
+    }
+    if(!checkforBoundary(tile.x,tile.y)){
+        if(checkForOccuppancy(tile.x,tile.y)){
+            if(levelData[tile.x][tile.y]==10){
+                console.log('boom');
+                var hexTile=hexGrid.getByName("tile"+tile.x+"_"+tile.y);
+                if(!hexTile.revealed){
+                    hexTile.reveal();
+                    //game over
+                }
+            }
+        }else{
+            var hexTile=hexGrid.getByName("tile"+tile.x+"_"+tile.y);
+                    
+            if(!hexTile.revealed){
+                if(levelData[tile.x][tile.y]==0){
+                    console.log('recursive reveal');
+                    recursiveReveal(tile.x,tile.y);
+                }else{
+                    //console.log('reveal');
+                    hexTile.reveal();
+                    revealedTiles++;
+                }
+                
+            }
+        }
+    }
+    infoTxt.text='found '+revealedTiles +' of '+blankTiles;
+}
+function findHexTile(){
+    var pos=game.input.activePointer.position;
+    pos.x-=hexGrid.x;
+    pos.y-=hexGrid.y;
+    var xVal = Math.floor((pos.x)/hexTileWidth);
+    var yVal = Math.floor((pos.y)/(hexTileHeight*3/4));
+    var dX = (pos.x)%hexTileWidth;
+    var dY = (pos.y)%(hexTileHeight*3/4); 
+    var slope = (hexTileHeight/4)/(hexTileWidth/2);
+    var caldY=dX*slope;
+    var delta=hexTileHeight/4-caldY;
+    
+    if(yVal%2==0){
+       //correction needs to happen in triangular portions & the offset rows
+       if(Math.abs(delta)>dY){
+           if(delta>0){//odd row bottom right half
+                xVal--;
+                yVal--;
+           }else{//odd row bottom left half
+                yVal--;
+           }
+       }
+    }else{
+        if(dX>hexTileWidth/2){// available values don't work for even row bottom right half
+            //console.log(delta+':'+dY+':'+((hexTileHeight/2)-caldY)); 
+            if(dY<((hexTileHeight/2)-caldY)){//even row bottom right half
+                yVal--;
+            }
+        }else{
+           if(dY>caldY){//odd row top right & mid right halves
+               xVal--;
+           }else{//even row bottom left half
+               yVal--;
+           }
+        }
+    }
+   
+   //infoTxt.text='i'+yVal +'j'+xVal;
+   pos.x=yVal;
+   pos.y=xVal;
+   return pos;
+}
+function recursiveReveal(i,j){
+    var newPt=new Phaser.Point(i,j);
+    var hexTile;
+    var tempArray=[newPt];
+    var neighbors;
+    while (tempArray.length){
+        newPt=tempArray[0];
+        var neighbors=getNeighbors(newPt.x,newPt.y);
+        
+        while(neighbors.length){
+            newPt=neighbors.shift();
+            hexTile=hexGrid.getByName("tile"+newPt.x+"_"+newPt.y);
+            if(!hexTile.revealed){
+                hexTile.reveal();
+                revealedTiles++;
+                if(levelData[newPt.x][newPt.y]==0){
+                    tempArray.push(newPt);
+                }
+            }
+        }
+        tempArray.shift();
     }
 }
