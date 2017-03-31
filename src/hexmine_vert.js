@@ -20,8 +20,8 @@ var levelData=
 [-1,-1,-1,0,0,0,0,0,0,0,-1,-1,-1]];
 
 var bmpText;
-var hexTileHeight=61;//this is for horizontal
-var hexTileWidth=52;//for horizontal
+var hexTileHeight=52;
+var hexTileWidth=61;
 var hexGrid;
 var infoTxt;
 var numMines=20;
@@ -36,19 +36,20 @@ function preload() {
 }
 
 function create() {
-    bmpText = game.add.bitmapText(10, 10, 'font', 'Horizontal HexMine', 18);
+    bmpText = game.add.bitmapText(10, 10, 'font', 'Vertical HexMine', 18);
     game.stage.backgroundColor = '#cccccc';
+    levelData=transpose(levelData);//transpose for having the right shape
     createLevel();
     infoTxt=game.add.text(10,30,'hi');
-    //game.input.addMoveCallback(findHexTile, this);
-    game.input.activePointer.leftButton.onUp.add(onTap);
+    game.input.addMoveCallback(findHexTile, this);
+    //game.input.activePointer.leftButton.onUp.add(onTap);
 }
 
 function createLevel(){
     hexGrid=game.add.group();
    
-    var verticalOffset=hexTileHeight*3/4;
-    var horizontalOffset=hexTileWidth;
+    var verticalOffset=hexTileHeight;
+    var horizontalOffset=hexTileWidth*3/4;
     var startX;
     var startY;
     var startXInit=hexTileWidth/2;
@@ -59,29 +60,29 @@ function createLevel(){
     var hexTile;
     for (var i = 0; i < levelData.length; i++)
     {
-        if(i%2!=0){
-            startX=2*startXInit;
-        }else{
-            startX=startXInit;
-        }
-        startY=startYInit+(i*verticalOffset);
+        startX=startXInit;
+        startY=2*startYInit+(i*verticalOffset);
         for (var j = 0; j < levelData[0].length; j++)
         {
+            if(j%2!=0){
+                startY=startY+startYInit;
+            }else{
+                startY=startY-startYInit;
+            }
             if(levelData[i][j]!=-1){
-                hexTile= new HexTile(game, startX, startY, 'hex',false,i,j,levelData[i][j]);
+                hexTile= new HexTile(game, startX, startY, 'hex', true,i,j,levelData[i][j]);
                 hexGrid.add(hexTile);
                 if(levelData[i][j]!=10){
                     blankTiles++;
                 }
             }
-            
             startX+=horizontalOffset;
         }
         
     }
     //hexGrid.scale=new Phaser.Point(0.4,0.4);
     hexGrid.x=50;
-    hexGrid.y=50;
+    hexGrid.y=0;
 }
 function addMines(){
     var tileType=0;
@@ -119,32 +120,32 @@ function updateNeighbors(i,j){//update neighbors around this mine
     }
 }
 function getNeighbors(i,j){
-    //first add common elements for odd & even rows
+    //first add common elements for odd & even cols
     var tempArray=[];
-    var newi=i-1;//tr even tl odd
+    var newi=i-1;//t even odd
     var newj=j;
     populateNeighbor(newi,newj,tempArray);
-    newi=i;
-    newj=j-1;//l even odd
-    populateNeighbor(newi,newj,tempArray);
     newi=i+1;
-    newj=j;//br even bl odd
+    newj=j;//b even odd
     populateNeighbor(newi,newj,tempArray);
-    newi=i;//r even odd
+    newi=i;
+    newj=j-1;//lt odd lb even
+    populateNeighbor(newi,newj,tempArray);
+    newi=i;//rt odd rb even
     newj=j+1;
     populateNeighbor(newi,newj,tempArray);
-    //now add the different neighbours for odd & even rows
-    if(i%2==0){
+    //now add the different neighbours for odd & even cols
+    if(j%2==0){//based on j
         newi=i-1;
-        newj=j-1;//tl even
+        newj=j-1;//lt even
         populateNeighbor(newi,newj,tempArray);
-        newi=i+1;//bl even 
+        newj=j+1;//rt even 
         populateNeighbor(newi,newj,tempArray);
     }else{
-        newi=i-1;
-        newj=j+1;//tr odd
+        newi=i+1;
+        newj=j-1;//lb odd
         populateNeighbor(newi,newj,tempArray);
-        newi=i+1;//br odd
+        newj=j+1;//rb odd
         populateNeighbor(newi,newj,tempArray);
     }
     
@@ -246,7 +247,7 @@ function findHexTile(){
         }
     }
    
-   //infoTxt.text='i'+yVal +'j'+xVal;
+   infoTxt.text='i'+yVal +'j'+xVal;
    pos.x=yVal;
    pos.y=xVal;
    return pos;
@@ -277,6 +278,10 @@ function recursiveReveal(i,j){
             hexTile.reveal();
             revealedTiles++;
         }
-        
     }
+}
+function transpose(a) {
+    return Object.keys(a[0]).map(
+        function (c) { return a.map(function (r) { return r[c]; }); }
+        );
 }
