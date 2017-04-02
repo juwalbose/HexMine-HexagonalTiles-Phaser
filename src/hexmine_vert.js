@@ -44,7 +44,7 @@ function create() {
     //game.input.addMoveCallback(findHexTile, this);
     game.input.onTap.add(onTap);
     game.input.onHold.add(onHold);
-    
+    game.input.holdRate=500;
     // Maintain aspect ratio
     game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 }
