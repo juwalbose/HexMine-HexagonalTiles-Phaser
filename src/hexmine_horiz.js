@@ -41,7 +41,13 @@ function create() {
     createLevel();
     infoTxt=game.add.text(10,30,'hi');
     //game.input.addMoveCallback(findHexTile, this);
-    game.input.activePointer.leftButton.onUp.add(onTap);
+    game.input.onTap.add(onTap);
+    game.input.onHold.add(onHold);
+    
+    // Maintain aspect ratio
+    game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
+    //game.scale.startFullScreen(true);
+    //game.scale.refresh();
 }
 
 function createLevel(){
@@ -174,13 +180,21 @@ function populateNeighbor(i,j, tempArray){//check & add new neighbor
         }
     }
 }
-function onTap(){
+function onHold(){
     var tile= findHexTile();
     if (game.input.activePointer.duration > 400) {//long press to toggle marking suspicious tile
         var hexTile=hexGrid.getByName("tile"+tile.x+"_"+tile.y);
         hexTile.toggleMark();
         return;
     }
+}
+function onTap(){
+    var tile= findHexTile();
+    /*if (game.input.activePointer.duration > 400) {//long press to toggle marking suspicious tile
+        var hexTile=hexGrid.getByName("tile"+tile.x+"_"+tile.y);
+        hexTile.toggleMark();
+        return;
+    }*/
     if(!checkforBoundary(tile.x,tile.y)){
         if(checkForOccuppancy(tile.x,tile.y)){
             if(levelData[tile.x][tile.y]==10){
