@@ -4,7 +4,8 @@ HexTile = function (game, x, y, tileImage,isVertical, i,j, type) {
     Phaser.Sprite.call(this, game, x, y, tileImage);
     this.anchor.setTo(0.5, 0.5);
     this.tileTag = game.make.text(0,0,type);
-    //this.tileTag = game.make.text(0,0,'i'+i+',j'+j);
+    //this.tileTag = game.make.text(0,0,'i'+(i)+',j'+(j));
+    //this.tileTag = game.make.text(0,0,'i'+(i-6)+',j'+(j-6));
         
     this.tileTag.anchor.setTo(0.5, 0.5);
     this.tileTag.addColor('#ffffff',0);
@@ -25,6 +26,9 @@ HexTile = function (game, x, y, tileImage,isVertical, i,j, type) {
     this.events.onInputOut.add(this.rollOut, this);
     this.events.onInputOver.add(this.rollOver, this);
     this.marked=false;
+    
+    //this.originali=(i-(Math.floor(j/2)));//x = x' - floor(y/2)
+    //this.originalj=j;
 };
 
 HexTile.prototype = Object.create(Phaser.Sprite.prototype);
