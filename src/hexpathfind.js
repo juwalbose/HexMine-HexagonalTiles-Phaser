@@ -211,7 +211,7 @@ function findPath(tile){//passes in a hexTileNode
                     hexTile.cost=tile.cost+10;
                     hexTile.previousNode=tile;//point to previous node
                     hexTile.nodeVisited=true;
-                    //hexTile.showDifference();//display heuristic & cost
+                    hexTile.showDifference();//display heuristic & cost
                 }else continue;
                 totalCost=hexTile.cost+hexTile.heuristic;
                 if(totalCost<currentLowestCost){//selct the next neighbour with lowest total cost
